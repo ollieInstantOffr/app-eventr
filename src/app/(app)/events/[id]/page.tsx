@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireSession } from "@/server/auth/session";
-import { assertEventInScope } from "@/server/auth/rbac";
+import { assertEventInScope, can } from "@/server/auth/rbac";
 import { prisma } from "@/server/db";
 import { storage } from "@/server/storage";
 import { EventBuilder } from "./event-builder";
@@ -23,6 +23,17 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
   if (!event) notFound();
 
   const organisation = session.membership.organisation;
+
+  // Counts for the delete dialog (screen 7h), which states exactly what goes.
+  const [entryCount, winnerCount, drawCount, undeliveredWinner] = await Promise.all([
+    prisma.entry.count({ where: { eventId: event.id, erasedAt: null } }),
+    prisma.winner.count({ where: { eventId: event.id, supersededAt: null } }),
+    prisma.drawLog.count({ where: { eventId: event.id } }),
+    prisma.winner.findFirst({
+      where: { eventId: event.id, supersededAt: null, deliveredAt: null },
+      include: { entry: { select: { name: true, number: true } } },
+    }),
+  ]);
 
   return (
     <EventBuilder
@@ -62,6 +73,16 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
         minimiseByDefault: organisation.minimiseByDefault,
       }}
       logoUrl={event.logoKey ? storage.url(event.logoKey) : null}
+      canDelete={can(session.role, "event:delete")}
+      deletionImpact={{
+        entryCount,
+        prizeCount: event.prizes.length,
+        winnerCount,
+        drawCount,
+        undeliveredWinnerName:
+          undeliveredWinner?.entry.name ??
+          (undeliveredWinner ? `Entry #${undeliveredWinner.entry.number}` : null),
+      }}
     />
   );
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { PanelSection } from "@/components/ui/glass-panel";
 import { publishEvent, saveEvent, type EventDraft } from "@/server/events/mutations";
+import { DeleteEventDialog, type DeletionImpact } from "./delete-event-dialog";
 import { LogoPicker } from "./logo-picker";
 import { FieldList, type BuilderField } from "./field-list";
 import { PrizeList, type BuilderPrize } from "./prize-list";
@@ -36,6 +37,8 @@ export function EventBuilder({
   event,
   organisation,
   logoUrl,
+  deletionImpact,
+  canDelete,
 }: {
   event: BuilderEvent;
   organisation: {
@@ -45,6 +48,8 @@ export function EventBuilder({
     minimiseByDefault: boolean;
   };
   logoUrl: string | null;
+  deletionImpact: DeletionImpact;
+  canDelete: boolean;
 }) {
   const [draft, setDraft] = useState<BuilderEvent>(event);
   const [logo, setLogo] = useState<{ key: string | null; url: string | null }>({
@@ -54,6 +59,7 @@ export function EventBuilder({
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [publishing, startPublish] = useTransition();
+  const [deleting, setDeleting] = useState(false);
 
   // What is already on the server. Autosave compares against this rather than
   // using a "first render" flag, which Strict Mode's double-invoked effects
@@ -274,8 +280,29 @@ export function EventBuilder({
           <PanelSection title="Prizes" hint="Drawn in this order">
             <PrizeList prizes={draft.prizes} onChange={(prizes) => update("prizes", prizes)} />
           </PanelSection>
+
+          {canDelete ? (
+            <PanelSection title="Delete event">
+              <p className="text-[12.5px] leading-relaxed text-ink-secondary">
+                Erases the event and every entry in it. Anonymised draw logs are kept so you can
+                still account for any draw that already happened.
+              </p>
+              <Button variant="danger" size="sm" className="mt-3" onClick={() => setDeleting(true)}>
+                Delete this event…
+              </Button>
+            </PanelSection>
+          ) : null}
         </div>
       </div>
+
+      {deleting ? (
+        <DeleteEventDialog
+          eventId={draft.id}
+          eventName={draft.name || "this event"}
+          impact={deletionImpact}
+          onClose={() => setDeleting(false)}
+        />
+      ) : null}
     </div>
   );
 }
