@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { storage } from "@/server/storage";
 
-/** Serves uploaded logos and generated assets from the storage volume. */
+/**
+ * Proxies a file through the app rather than the bucket directly. Nothing in
+ * the app generates links here any more — storage.url() points straight at
+ * S3 — but it's kept as a working fallback for any link handed out before
+ * that switch.
+ */
 export async function GET(_request: Request, { params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
 

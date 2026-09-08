@@ -50,6 +50,30 @@ To force the preview driver for a test run:
 RESEND_API_KEY= docker compose up
 ```
 
+### Uploaded files (`S3_*`)
+
+Logos and generated posters go to an S3-compatible bucket — required, not
+optional; the app won't start without `S3_BUCKET`, `S3_ENDPOINT`,
+`S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set. It works against real AWS
+S3 or any S3-compatible provider (MinIO, Cloudflare R2, DigitalOcean Spaces,
+Backblaze B2, a self-hosted Garage/SeaweedFS, ...) — point `S3_ENDPOINT` at
+that provider. `S3_REGION` defaults to `"auto"`, which R2 and most
+self-hosted providers accept; on real AWS S3 set it to your bucket's actual
+region or request signing fails.
+
+**The bucket must allow public reads.** Files are served by linking straight
+to the object rather than proxying through the app — nothing stored here
+(logos, posters) is ever private. On AWS that means turning off "Block public
+access" for bucket policies and attaching one granting `s3:GetObject` on
+`arn:aws:s3:::<bucket>/*` to `"Principal": "*"`. A bucket created after April
+2023 also defaults to Object Ownership "Bucket owner enforced," which rejects
+object ACLs outright — the app never sets one, for exactly that reason; a
+bucket policy is what works uniformly across old and new buckets and every
+other provider.
+
+`UPLOADS_DIR` is unrelated to any of this — it's only where email previews
+get written when `RESEND_API_KEY` is empty.
+
 ## Trying it out
 
 1. Register at `/register` — no password, you get a magic link.
@@ -145,5 +169,3 @@ calls `process.loadEnvFile()`.
 - SMS for winner notifications is behind a provider interface
   (`src/server/sms/send.ts`) with a generic HTTP implementation; point
   `SMS_PROVIDER` at a real endpoint or write a driver.
-- Storage is a local volume behind `StorageAdapter`; an S3 driver drops in
-  without touching call sites.

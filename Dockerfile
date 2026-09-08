@@ -21,7 +21,11 @@ COPY . .
 # in — the real values arrive at runtime from compose.
 ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public" \
     SESSION_SECRET="build-time-placeholder-not-used-at-runtime" \
-    APP_URL="http://localhost:3000"
+    APP_URL="http://localhost:3000" \
+    S3_BUCKET="build-placeholder" \
+    S3_ENDPOINT="http://127.0.0.1:9000" \
+    S3_ACCESS_KEY_ID="build-placeholder" \
+    S3_SECRET_ACCESS_KEY="build-placeholder"
 RUN npx prisma generate && npm run build
 
 # -------------------------------------------------------------------- migrator

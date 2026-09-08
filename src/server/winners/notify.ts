@@ -37,7 +37,8 @@ export async function notifyWinner(winnerId: string): Promise<NotifyResult> {
     prizeName: prize.name,
     organisationName: organisation.name,
     organisationEmail: organisation.replyToEmail,
-    logoUrl: logoKey ? `${env.APP_URL}${storage.url(logoKey)}` : null,
+    // storage.url() already returns a full S3 URL — no app-origin prefix.
+    logoUrl: logoKey ? storage.url(logoKey) : null,
     entryNumber: entry.number,
     drawnAt: formatTime(winner.drawnAt),
     venueLabel: event.venueLabel,

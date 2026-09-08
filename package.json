@@ -2,7 +2,7 @@
   "name": "eventr",
   "version": "0.1.0",
   "private": true,
-  "description": "Eventr by instantoffr \u2014 run a raffle at your event in ten minutes.",
+  "description": "Eventr by instantoffr — run a raffle at your event in ten minutes.",
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
@@ -21,6 +21,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "7.10.0",
     "next": "16.3.4",
