@@ -20,7 +20,7 @@ export function LegalPage({
   aside?: React.ReactNode;
 }) {
   return (
-    <main className="relative mx-auto grid max-w-[1160px] gap-8 px-6 py-10 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <main className="relative mx-auto grid max-w-[1320px] gap-8 px-4 sm:px-6 lg:px-8 py-10 lg:grid-cols-[220px_minmax(0,1fr)]">
       <nav aria-label="On this page" className="hidden lg:block">
         <div className="sticky top-8">
           <p className="text-[11.5px] font-bold text-ink-muted">On this page</p>

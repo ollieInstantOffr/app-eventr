@@ -58,7 +58,7 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <main className="relative">
-      <section className="mx-auto max-w-[1160px] px-6 pt-10 pb-20">
+      <section className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-10 pb-20">
         <p className="text-[13px] font-bold text-ink-muted">
           Made for trade shows, launches and company parties
         </p>
@@ -134,7 +134,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="how" className="mx-auto max-w-[1160px] px-6 py-16">
+      <section id="how" className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-[clamp(28px,3.6vw,40px)] font-extrabold tracking-[-0.03em]">
           Three steps. No app.
         </h2>
@@ -160,7 +160,7 @@ export default function LandingPage() {
         </ol>
       </section>
 
-      <section id="features" className="mx-auto max-w-[1160px] px-6 py-16">
+      <section id="features" className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-[clamp(28px,3.6vw,40px)] font-extrabold tracking-[-0.03em]">
           Everything the raffle needs. Nothing it doesn&rsquo;t.
         </h2>
@@ -179,7 +179,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1160px] px-6 py-16">
+      <section className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 py-16">
         <GlassPanel className="p-9 text-center">
           <h2 className="text-[clamp(26px,3.2vw,36px)] font-extrabold tracking-[-0.03em]">
             Free. No card, no tiers.
@@ -212,7 +212,7 @@ export default function LandingPage() {
         </GlassPanel>
       </section>
 
-      <section className="mx-auto max-w-[1160px] px-6 pb-20">
+      <section className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 pb-20">
         <GlassPanel className="p-8">
           <h2 className="text-[24px] font-extrabold tracking-[-0.03em]">GDPR by default</h2>
           <p className="mt-2 max-w-[70ch] text-[14px] leading-relaxed text-ink-secondary">

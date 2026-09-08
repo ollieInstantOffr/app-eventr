@@ -10,7 +10,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
     <div className="relative min-h-screen bg-screen">
       <AmbientBackground />
 
-      <header className="relative mx-auto flex max-w-[1160px] items-center justify-between gap-6 px-6 py-6">
+      <header className="relative mx-auto flex max-w-[1320px] items-center justify-between gap-6 px-4 py-6 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Eventr home">
           <Logo />
         </Link>
@@ -36,7 +36,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
       {children}
 
-      <footer className="relative mx-auto max-w-[1160px] border-t border-black/8 px-6 py-10">
+      <footer className="relative mx-auto max-w-[1320px] border-t border-black/8 px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <Logo size="sm" />
           <nav className="flex flex-wrap gap-5 text-[12.5px] font-bold text-ink-muted">

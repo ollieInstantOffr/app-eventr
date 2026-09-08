@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type { EventStatus } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { TimePicker } from "@/components/ui/time-picker";
 import { PanelSection } from "@/components/ui/glass-panel";
 import { publishEvent, saveEvent, type EventDraft } from "@/server/events/mutations";
 import { DeleteEventDialog, type DeletionImpact } from "./delete-event-dialog";
@@ -188,27 +190,24 @@ export function EventBuilder({
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label="Date" htmlFor="date">
-                  <Input
+                  <DatePicker
                     id="date"
-                    type="date"
-                    value={draft.eventDate ?? ""}
-                    onChange={(e) => update("eventDate", e.target.value || null)}
+                    value={draft.eventDate}
+                    onChange={(value) => update("eventDate", value)}
                   />
                 </Field>
                 <Field label="Entries close" htmlFor="close">
-                  <Input
+                  <TimePicker
                     id="close"
-                    type="time"
-                    value={draft.entriesCloseAt ?? ""}
-                    onChange={(e) => update("entriesCloseAt", e.target.value || null)}
+                    value={draft.entriesCloseAt}
+                    onChange={(value) => update("entriesCloseAt", value)}
                   />
                 </Field>
                 <Field label="Draw at" htmlFor="draw">
-                  <Input
+                  <TimePicker
                     id="draw"
-                    type="time"
-                    value={draft.drawAt ?? ""}
-                    onChange={(e) => update("drawAt", e.target.value || null)}
+                    value={draft.drawAt}
+                    onChange={(value) => update("drawAt", value)}
                   />
                 </Field>
               </div>

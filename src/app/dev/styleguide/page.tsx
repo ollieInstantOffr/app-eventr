@@ -1,6 +1,7 @@
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DateTimeDemo } from "./date-time-demo";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Toggle } from "@/components/ui/toggle";
 import { GlassPanel, PanelSection } from "@/components/ui/glass-panel";
@@ -37,9 +38,7 @@ export default function StyleguidePage() {
             <Field label="Event name" htmlFor="sg-name">
               <Input id="sg-name" defaultValue="Nordic Tech Expo 2026" />
             </Field>
-            <Field label="Entries close" htmlFor="sg-close" hint="Local time">
-              <Input id="sg-close" type="time" defaultValue="16:00" />
-            </Field>
+            <DateTimeDemo />
             <Field label="Claim window" htmlFor="sg-claim">
               <Select id="sg-claim" defaultValue="TODAY">
                 <option value="MINUTES_15">15 min</option>
