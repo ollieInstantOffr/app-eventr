@@ -23,6 +23,10 @@ export interface StorageAdapter {
   put(body: Buffer, contentType: string, extension: string): Promise<StoredFile>;
   get(key: string): Promise<{ body: Buffer; contentType: string } | null>;
   delete(key: string): Promise<void>;
+  /**
+   * App-relative path, not an absolute URL — see absoluteUrl() for the one
+   * place (email) that needs the full thing.
+   */
   url(key: string): string;
 }
 
@@ -62,21 +66,18 @@ export function sanitiseSvg(svg: string): string {
  * unconditionally (`<endpoint>/<bucket>/<key>`), which every S3-compatible
  * provider accepts and several require, unlike AWS's virtual-hosted style.
  *
- * Everything stored here — logos, generated posters — is meant to be public:
- * it's served by building the object's URL directly rather than proxying
- * through the app, which needs the bucket configured for public reads.
- * On AWS specifically that means turning off "Block public access" for
- * bucket policies and attaching one granting `s3:GetObject` on
- * `arn:aws:s3:::<bucket>/*` to `"Principal": "*"`. Newer AWS buckets default
- * to Object Ownership "Bucket owner enforced", which rejects object ACLs
- * outright, so this deliberately never sets one — a bucket policy is the
- * only thing that works across both old and new buckets, and across every
- * other S3-compatible provider too.
+ * Files are served back through the app's own /api/files route rather than
+ * by linking a browser straight at the object. That costs a proxied round
+ * trip, but it's the only approach that works everywhere: plenty of
+ * S3-compatible servers require every request to be SigV4-signed and have no
+ * notion of an anonymous public read, and on AWS a bucket is private by
+ * default and needs a deliberate public-read policy. The app holds the
+ * credentials, so it can always sign the read; the route caches
+ * aggressively, and keys are content-addressed, so this stays cheap.
  */
 class S3Storage implements StorageAdapter {
   private readonly client: S3Client;
   private readonly bucket: string;
-  private readonly publicBase: string;
 
   constructor() {
     this.bucket = env.S3_BUCKET;
@@ -89,7 +90,6 @@ class S3Storage implements StorageAdapter {
         secretAccessKey: env.S3_SECRET_ACCESS_KEY,
       },
     });
-    this.publicBase = `${env.S3_ENDPOINT.replace(/\/+$/, "")}/${this.bucket}`;
   }
 
   // Content-addressed, so re-uploading the same logo doesn't duplicate it and
@@ -142,7 +142,7 @@ class S3Storage implements StorageAdapter {
   }
 
   url(key: string): string {
-    return `${this.publicBase}/${key}`;
+    return `/api/files/${key}`;
   }
 }
 
@@ -159,6 +159,14 @@ function isNotFound(error: unknown): boolean {
 
 export const storage: StorageAdapter = new S3Storage();
 
+/**
+ * The absolute form of storage.url(), for email — a relative path is
+ * meaningless in an inbox, which has no page to resolve it against.
+ */
+export function absoluteUrl(key: string): string {
+  return new URL(storage.url(key), env.APP_URL).toString();
+}
+
 /** Validates, sanitises and stores one uploaded file. */
 export async function storeUpload(file: File): Promise<StoredFile> {
   const extension = extensionForType(file.type);
@@ -174,7 +182,18 @@ export async function storeUpload(file: File): Promise<StoredFile> {
     body = Buffer.from(sanitiseSvg(body.toString("utf8")), "utf8");
   }
 
-  return storage.put(body, file.type, extension);
+  try {
+    return await storage.put(body, file.type, extension);
+  } catch (error) {
+    // Storage being unreachable or refusing the write is an operational
+    // problem, not something the organiser can act on — but it must not take
+    // the whole page down with an unhandled error either. The real cause goes
+    // to the logs; they get a form message and keep their unsaved work.
+    console.error("[storage] upload failed:", error);
+    throw new UploadError(
+      "Couldn't save that file — the storage service didn't accept it. Try again in a moment.",
+    );
+  }
 }
 
 export class UploadError extends Error {}

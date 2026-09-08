@@ -61,15 +61,14 @@ that provider. `S3_REGION` defaults to `"auto"`, which R2 and most
 self-hosted providers accept; on real AWS S3 set it to your bucket's actual
 region or request signing fails.
 
-**The bucket must allow public reads.** Files are served by linking straight
-to the object rather than proxying through the app — nothing stored here
-(logos, posters) is ever private. On AWS that means turning off "Block public
-access" for bucket policies and attaching one granting `s3:GetObject` on
-`arn:aws:s3:::<bucket>/*` to `"Principal": "*"`. A bucket created after April
-2023 also defaults to Object Ownership "Bucket owner enforced," which rejects
-object ACLs outright — the app never sets one, for exactly that reason; a
-bucket policy is what works uniformly across old and new buckets and every
-other provider.
+**The bucket can stay private.** Files are read back with a signed request
+and served through the app's own `/api/files` route, so no public-read policy
+is needed — the credentials above are the only access required. That costs a
+proxied round trip, but it's the only thing that works everywhere: plenty of
+S3-compatible servers require every request to be SigV4-signed and have no
+anonymous read at all, and an AWS bucket is private by default. Keys are
+content-addressed, so responses are immutable and cached hard — the bucket
+gets hit once per file per cache lifetime, not once per pageview.
 
 `UPLOADS_DIR` is unrelated to any of this — it's only where email previews
 get written when `RESEND_API_KEY` is empty.

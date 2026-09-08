@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { storage } from "@/server/storage";
 
 /**
- * Proxies a file through the app rather than the bucket directly. Nothing in
- * the app generates links here any more — storage.url() points straight at
- * S3 — but it's kept as a working fallback for any link handed out before
- * that switch.
+ * Serves a stored file by making a signed read against the bucket and
+ * streaming the bytes back. This is how every logo reaches a browser: a lot
+ * of S3-compatible servers require every request to be SigV4-signed and have
+ * no anonymous read at all, and an AWS bucket is private unless someone
+ * deliberately opens it. The app has the credentials, so it can always sign.
+ *
+ * Keys are content-addressed, so the response is immutable and cached hard —
+ * the bucket is hit once per file per cache lifetime, not once per pageview.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;

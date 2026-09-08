@@ -4,7 +4,7 @@ import { prisma } from "@/server/db";
 import { sendEmail } from "@/server/email/send";
 import { winnerEmail, winnerSms } from "@/server/email/templates/winner";
 import { sendSms, smsEnabled } from "@/server/sms/send";
-import { storage } from "@/server/storage";
+import { absoluteUrl } from "@/server/storage";
 import { formatTime } from "@/lib/format";
 
 export type NotifyResult = { email: boolean; sms: boolean; skipped?: string };
@@ -37,8 +37,7 @@ export async function notifyWinner(winnerId: string): Promise<NotifyResult> {
     prizeName: prize.name,
     organisationName: organisation.name,
     organisationEmail: organisation.replyToEmail,
-    // storage.url() already returns a full S3 URL — no app-origin prefix.
-    logoUrl: logoKey ? storage.url(logoKey) : null,
+    logoUrl: logoKey ? absoluteUrl(logoKey) : null,
     entryNumber: entry.number,
     drawnAt: formatTime(winner.drawnAt),
     venueLabel: event.venueLabel,
