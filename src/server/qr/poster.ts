@@ -2,6 +2,7 @@ import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { qrPng } from "@/server/qr/qr";
 import { storage } from "@/server/storage";
+import { pdfText } from "@/server/pdf/text";
 
 // Points, at 72pt/inch.
 const SIZES = {
@@ -72,20 +73,20 @@ export async function buildPosterPdf(options: {
     }
   } else {
     const size = width * 0.035;
-    page.drawText(options.organisationName, { x: margin, y: cursor - size, size, font: bold, color: ink });
+    page.drawText(pdfText(options.organisationName), { x: margin, y: cursor - size, size, font: bold, color: ink });
     cursor -= size + height * 0.035;
   }
 
   const headlineSize = width * 0.072;
   for (const line of wrap(options.headline, regular, headlineSize, width - margin * 2, bold)) {
-    page.drawText(line, { x: margin, y: cursor - headlineSize, size: headlineSize, font: bold, color: ink });
+    page.drawText(pdfText(line), { x: margin, y: cursor - headlineSize, size: headlineSize, font: bold, color: ink });
     cursor -= headlineSize * 1.15;
   }
   cursor -= height * 0.018;
 
   const bodySize = width * 0.032;
   for (const line of wrap(options.prizeLine, regular, bodySize, width - margin * 2, regular)) {
-    page.drawText(line, { x: margin, y: cursor - bodySize, size: bodySize, font: regular, color: muted });
+    page.drawText(pdfText(line), { x: margin, y: cursor - bodySize, size: bodySize, font: regular, color: muted });
     cursor -= bodySize * 1.4;
   }
 
@@ -109,8 +110,8 @@ export async function buildPosterPdf(options: {
   page.drawImage(qrImage, { x: qrX, y: qrY, width: qrSize, height: qrSize });
 
   const urlSize = width * 0.03;
-  const urlWidth = bold.widthOfTextAtSize(options.displayUrl, urlSize);
-  page.drawText(options.displayUrl, {
+  const urlWidth = bold.widthOfTextAtSize(pdfText(options.displayUrl), urlSize);
+  page.drawText(pdfText(options.displayUrl), {
     x: (width - urlWidth) / 2,
     y: qrY - pad - urlSize * 1.6,
     size: urlSize,
@@ -120,8 +121,8 @@ export async function buildPosterPdf(options: {
 
   if (options.closesAt) {
     const footSize = width * 0.026;
-    const footWidth = regular.widthOfTextAtSize(options.closesAt, footSize);
-    page.drawText(options.closesAt, {
+    const footWidth = regular.widthOfTextAtSize(pdfText(options.closesAt), footSize);
+    page.drawText(pdfText(options.closesAt), {
       x: (width - footWidth) / 2,
       y: height * 0.075,
       size: footSize,
@@ -136,7 +137,7 @@ export async function buildPosterPdf(options: {
 type Font = Awaited<ReturnType<PDFDocument["embedFont"]>>;
 
 function wrap(text: string, _font: Font, size: number, maxWidth: number, measure: Font): string[] {
-  const words = text.split(/\s+/);
+  const words = pdfText(text).split(/\s+/);
   const lines: string[] = [];
   let line = "";
 

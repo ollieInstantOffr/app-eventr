@@ -4,6 +4,7 @@ import { CURRENT_DPA_VERSION, LEGAL_UPDATED_AT } from "@/lib/legal-versions";
 import { getSession } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { DPA_CLAUSES } from "@/server/gdpr/dpa";
+import { pdfText } from "@/server/pdf/text";
 
 /**
  * "Download PDF" from screen 6a. Signed in, it names the actual controller and
@@ -38,13 +39,13 @@ export async function GET() {
       page = pdf.addPage([pageWidth, 841.89]);
       cursor = page.getHeight() - margin;
     }
-    page.drawText(text, { x: margin, y: cursor - size, size, font, color: colour });
+    page.drawText(pdfText(text), { x: margin, y: cursor - size, size, font, color: colour });
     cursor -= size * gap;
   };
 
   const paragraph = (text: string, size = 10, font = regular, colour = muted, indent = 0) => {
     const maxWidth = pageWidth - margin * 2 - indent;
-    const words = text.split(/\s+/);
+    const words = pdfText(text).split(/\s+/);
     let line = "";
     for (const word of words) {
       const candidate = line ? `${line} ${word}` : word;

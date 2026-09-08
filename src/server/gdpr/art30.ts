@@ -2,6 +2,7 @@ import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { RETENTION_LABELS } from "@/server/consent";
 import { prisma } from "@/server/db";
+import { pdfText } from "@/server/pdf/text";
 
 /**
  * The Art. 30 record of processing, generated from what the organisation
@@ -36,13 +37,13 @@ export async function buildProcessingRecord(organisationId: string): Promise<Uin
       page = pdf.addPage([595.28, 841.89]);
       cursor = page.getHeight() - margin;
     }
-    page.drawText(text, { x: margin, y: cursor - size, size, font, color: colour });
+    page.drawText(pdfText(text), { x: margin, y: cursor - size, size, font, color: colour });
     cursor -= size * gap;
   };
 
   const wrap = (text: string, size: number) => {
     const maxWidth = page.getWidth() - margin * 2;
-    const words = text.split(/\s+/);
+    const words = pdfText(text).split(/\s+/);
     let current = "";
     for (const word of words) {
       const candidate = current ? `${current} ${word}` : word;

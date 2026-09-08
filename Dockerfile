@@ -16,6 +16,12 @@ RUN npm ci --ignore-scripts \
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Placeholders only. `prisma generate` reads the config, and `next build`
+# validates the environment, but neither connects to anything or bakes these
+# in — the real values arrive at runtime from compose.
+ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public" \
+    SESSION_SECRET="build-time-placeholder-not-used-at-runtime" \
+    APP_URL="http://localhost:3000"
 RUN npx prisma generate && npm run build
 
 # -------------------------------------------------------------------- migrator
