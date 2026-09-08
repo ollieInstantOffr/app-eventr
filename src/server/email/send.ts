@@ -40,8 +40,10 @@ const MAX_ATTEMPTS = 3;
 export async function sendEmail(email: OutgoingEmail): Promise<SendResult> {
   if (email.dedupeKey) {
     const existing = await prisma.emailLog.findUnique({ where: { dedupeKey: email.dedupeKey } });
-    if (existing && existing.status === "sent") {
-      return { delivered: true, providerId: existing.providerId ?? undefined };
+    // "previewed" counts as done too, so the no-key driver behaves the same as
+    // real delivery: pressing "Notify all winners" twice sends once either way.
+    if (existing && (existing.status === "sent" || existing.status === "previewed")) {
+      return { delivered: existing.status === "sent", providerId: existing.providerId ?? undefined };
     }
   }
 
