@@ -13,7 +13,6 @@ export default function TermsPage() {
     <LegalPage
       kicker={`Legal · Version ${CURRENT_TERMS_VERSION} · Updated ${LEGAL_UPDATED_AT}`}
       title="Terms of Service"
-      caveat="Draft for design — must be reviewed by a lawyer before publishing."
       intro={
         <>
           <p>

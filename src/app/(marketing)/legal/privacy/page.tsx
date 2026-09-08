@@ -13,7 +13,6 @@ export default function PrivacyPage() {
     <LegalPage
       kicker={`Legal · Version ${CURRENT_PRIVACY_VERSION} · Updated ${LEGAL_UPDATED_AT}`}
       title="Privacy Policy"
-      caveat="Draft for design — must be reviewed by a lawyer before publishing."
       intro={
         <>
           <p>

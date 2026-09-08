@@ -140,8 +140,9 @@ calls `process.loadEnvFile()`.
 ## Still to do
 
 - The legal copy (Terms, Privacy, Cookies, DPA) is the design's draft wording and
-  carries its own "must be reviewed by a lawyer" caveat. Governing law points at
-  "the country where instantoffr is registered" — swap in the real one.
+  has not been through a lawyer. Only the DPA still says so on the page. Governing
+  law points at "the country where instantoffr is registered" — swap in the real
+  one.
 - SMS for winner notifications is behind a provider interface
   (`src/server/sms/send.ts`) with a generic HTTP implementation; point
   `SMS_PROVIDER` at a real endpoint or write a driver.
