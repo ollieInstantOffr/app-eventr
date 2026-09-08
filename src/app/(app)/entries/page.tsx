@@ -8,8 +8,10 @@ import { listEvents } from "@/server/events/queries";
 export const metadata = { title: "Entries" };
 
 /**
- * The sidebar's Entries link. Entries belong to an event, so with one event
- * this goes straight there and otherwise asks which.
+ * The sidebar's Entries link. Entries belong to an event, so with exactly
+ * one event this goes straight there; with several it asks which. With none
+ * at all it stays right here and shows that plainly — this is the Entries
+ * page with nothing in it yet, not a bounce back to the events dashboard.
  */
 export default async function EntriesIndexPage() {
   const session = await requireSession("/entries");
@@ -21,16 +23,21 @@ export default async function EntriesIndexPage() {
     <div className="flex flex-col gap-5">
       <header className="px-1">
         <h1 className="text-[28px] font-extrabold">Entries</h1>
-        <p className="mt-1 text-[14px] text-ink-secondary">Pick an event to see who has entered.</p>
+        <p className="mt-1 text-[14px] text-ink-secondary">
+          {events.length === 0
+            ? "Everyone who scans a QR code shows up here."
+            : "Pick an event to see who has entered."}
+        </p>
       </header>
 
       {events.length === 0 ? (
-        <GlassPanel className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <h2 className="text-[19px] font-extrabold">No events yet</h2>
-          <p className="max-w-md text-[13.5px] text-ink-secondary">
-            Entries appear once you have an event and someone scans its QR code.
+        <GlassPanel className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+          <h2 className="text-[17px] font-extrabold">No entries yet</h2>
+          <p className="max-w-md text-[13px] leading-relaxed text-ink-secondary">
+            The first scan shows up here instantly — you just need an event publishing entries
+            first.
           </p>
-          <ButtonLink href="/events/new" className="mt-2">
+          <ButtonLink href="/events/new" size="sm" className="mt-3">
             Create your first event
           </ButtonLink>
         </GlassPanel>

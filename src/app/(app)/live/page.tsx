@@ -32,8 +32,8 @@ export default async function LiveIndexPage() {
           <p className="max-w-md text-[13.5px] text-ink-secondary">
             Publish an event and it appears here, ready to run on the big screen.
           </p>
-          <ButtonLink href="/events" className="mt-2">
-            Go to events
+          <ButtonLink href="/events/new" className="mt-2">
+            Create your first event
           </ButtonLink>
         </GlassPanel>
       ) : (
