@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/*
+ * Eventr design tokens.
+ *
+ * Every value here is taken from the mockups in "Raffle App Mockups.dc.html" —
+ * the screens are styled inline there, so these are the literal colours,
+ * radii and shadows the design uses. Screens should only ever reach for
+ * these, never a raw hex.
+ */
+@theme {
+  /* Surfaces */
+  --color-canvas: #e9e7e1;
+  --color-screen: #f2f0eb;
+  --color-paper: #faf9f7;
+  --color-white: #ffffff;
+
+  /* Text */
+  --color-ink: #1c1a27;
+  --color-ink-secondary: #3f3c52;
+  --color-ink-muted: #6e6a85;
+  --color-ink-soft: #8a879c;
+  --color-ink-faint: #a8a5b8;
+  --color-ink-ghost: #b5b2c6;
+
+  /* Action — violet is the single action colour in this system */
+  --color-violet: #6f5cf0;
+  --color-violet-hover: #5644d6;
+  --color-violet-deep: #4f43b8;
+  --color-violet-light: #7a67f5;
+  --color-violet-soft: #9d8ff7;
+  --color-violet-tint: #ece9fb;
+  --color-violet-tint-strong: #ddd8f8;
+  --color-violet-tint-mid: #e3ddff;
+  --color-violet-blob: #c9bdff;
+
+  /* Teal marks "live" */
+  --color-teal: #3fb8c8;
+  --color-teal-deep: #2fb7c8;
+  --color-teal-dark: #2a9aab;
+  --color-teal-darker: #1f8d9c;
+  --color-teal-soft: #8fd6df;
+  --color-teal-blob: #b9e6ea;
+
+  /* Peach accents */
+  --color-peach: #ffd9c2;
+  --color-peach-mid: #f7b58a;
+  --color-peach-strong: #f0a35c;
+  --color-peach-deep: #f0865c;
+  --color-peach-ink: #7a4a12;
+  --color-peach-ink-soft: #c2691f;
+
+  /* Danger */
+  --color-danger: #b83a3a;
+
+  /* Type */
+  --font-sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+
+  /* Radii used by the panels and controls in the mockups */
+  --radius-field: 12px;
+  --radius-tile: 9px;
+  --radius-chip: 18px;
+  --radius-panel: 24px;
+
+  /* The frosted panel shadow */
+  --shadow-panel: 0 24px 60px rgba(40, 30, 80, 0.14);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-lift: 0 8px 24px rgba(40, 30, 80, 0.1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* The design leans on tight tracking for headings. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.03em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* The frosted white panel that every organiser screen is built from. */
+  .glass {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 1);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .glass-flat {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-panel);
+  }
+
+  /* Soft violet/teal light behind the panels. */
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

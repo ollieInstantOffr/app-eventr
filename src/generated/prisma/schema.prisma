@@ -1,0 +1,524 @@
+// Eventr data model.
+//
+// One organisation runs many events. One event = one QR + one entry form +
+// an ordered list of prizes. Guests create entries; the live draw turns
+// entries into winners and records how it did it.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Organisation, people and access
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+  KIOSK
+}
+
+enum RetentionPeriod {
+  DAYS_7
+  DAYS_30
+  DAYS_90
+  MONTHS_12
+}
+
+model Organisation {
+  id           String  @id @default(cuid())
+  name         String
+  logoKey      String?
+  accentColour String  @default("#6F5CF0")
+  replyToEmail String?
+
+  // Privacy & data settings (screen 4d). Events inherit these.
+  retentionPeriod       RetentionPeriod @default(DAYS_30)
+  minimiseByDefault     Boolean         @default(true)
+  maskNamesOnScreen     Boolean         @default(true)
+  marketingOptInEnabled Boolean         @default(false)
+  autoFulfilErasure     Boolean         @default(false)
+
+  // Which version of the DPA and Terms were accepted, by whom and when.
+  dpaVersion      String?
+  dpaAcceptedAt   DateTime?
+  dpaAcceptedById String?
+  termsVersion    String?
+  termsAcceptedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships     Membership[]
+  events          Event[]
+  invites         Invite[]
+  consentVersions ConsentTextVersion[]
+  auditLogs       AuditLog[]
+
+  @@index([deletedAt])
+}
+
+model User {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  firstName String?
+  lastName  String?
+  locale    String  @default("en")
+  timeZone  String  @default("Europe/Berlin")
+
+  // Organiser preference behind "Turn off reminders" in the reminder email.
+  remindersEnabled Boolean @default(true)
+
+  totpSecret        String?
+  totpEnabledAt     DateTime?
+  totpRecoveryCodes String[]  @default([])
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  lastSeenAt DateTime?
+
+  memberships Membership[]
+  sessions    Session[]
+  magicLinks  MagicLink[]
+  sentInvites Invite[]     @relation("InviteSender")
+  auditLogs   AuditLog[]
+}
+
+model Membership {
+  id             String @id @default(cuid())
+  userId         String
+  organisationId String
+  role           Role
+
+  // "Limit to one event" in the invite modal (screen 7g).
+  scopedEventId String?
+
+  createdAt DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  scopedEvent  Event?       @relation("MembershipScope", fields: [scopedEventId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, organisationId])
+  @@index([organisationId])
+}
+
+model Session {
+  id             String  @id @default(cuid())
+  tokenHash      String  @unique
+  userId         String
+  organisationId String?
+
+  userAgent String?
+  ipHash    String?
+  label     String?
+
+  createdAt    DateTime  @default(now())
+  lastActiveAt DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+
+  // Set once the TOTP challenge has been passed, when 2FA is enabled.
+  mfaSatisfiedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model MagicLink {
+  id        String  @id @default(cuid())
+  tokenHash String  @unique
+  email     String
+  userId    String?
+
+  // Where to land after sign-in, and which waiting tab to release over SSE.
+  redirectTo String?
+  channelId  String  @unique @default(cuid())
+
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  consumedAt DateTime?
+  requestIp  String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
+model Invite {
+  id             String  @id @default(cuid())
+  tokenHash      String  @unique
+  organisationId String
+  email          String
+  role           Role
+  scopedEventId  String?
+  invitedById    String?
+
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  revokedAt  DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("InviteSender", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organisationId, email])
+}
+
+// A booth iPad or laptop paired with a short code (screen 7g). It can only
+// reach the QR screen and the live draw, and never receives personal data.
+model KioskPairing {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  eventId   String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  claimedAt DateTime?
+
+  event  Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  device KioskDevice?
+}
+
+model KioskDevice {
+  id        String  @id @default(cuid())
+  tokenHash String  @unique
+  eventId   String
+  pairingId String? @unique
+  label     String?
+
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  event   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  pairing KioskPairing? @relation(fields: [pairingId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+}
+
+// ---------------------------------------------------------------------------
+// Events, form fields and prizes
+// ---------------------------------------------------------------------------
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  COMPLETED
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  COMPANY
+  CHOICE
+  CHECKBOX
+}
+
+enum DrawAnimation {
+  NAME_REEL
+  WHEEL
+  COUNTDOWN
+  CARDS
+}
+
+model Event {
+  id             String      @id @default(cuid())
+  organisationId String
+  slug           String      @unique
+  name           String
+  status         EventStatus @default(DRAFT)
+
+  eventDate      DateTime?
+  entriesCloseAt DateTime?
+  drawAt         DateTime?
+  welcomeMessage String?
+  venueLabel     String?
+
+  // Branding overrides; null means inherit from the organisation.
+  logoKey             String?
+  accentColour        String?
+  backgroundColour    String?
+  screenBackgroundKey String?
+
+  // Live draw settings (screen 1f).
+  animation        DrawAnimation @default(NAME_REEL)
+  suspenseSeconds  Int           @default(6)
+  showLogo         Boolean       @default(true)
+  showEntryCount   Boolean       @default(true)
+  maskPersonalData Boolean       @default(true)
+  confettiOnWin    Boolean       @default(true)
+  redrawEnabled    Boolean       @default(true)
+
+  // Per-event retention, defaulting to the organisation's setting.
+  retentionPeriod RetentionPeriod?
+  claimWindow     ClaimWindow      @default(TODAY)
+
+  nextEntryNumber Int @default(1)
+
+  publishedAt DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  organisation      Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  fields            FormField[]
+  prizes            Prize[]
+  entries           Entry[]
+  winners           Winner[]
+  drawLogs          DrawLog[]
+  guestRequests     GuestRequest[]
+  kioskPairings     KioskPairing[]
+  kioskDevices      KioskDevice[]
+  scopedMemberships Membership[]   @relation("MembershipScope")
+
+  @@index([organisationId, createdAt])
+  @@index([status, entriesCloseAt])
+}
+
+model FormField {
+  id       String    @id @default(cuid())
+  eventId  String
+  key      String
+  label    String
+  type     FieldType
+  required Boolean   @default(false)
+  order    Int
+  options  String[]  @default([])
+
+  // Set when the organiser enabled a field the minimisation default hides.
+  justification String?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, key])
+  @@index([eventId, order])
+}
+
+model Prize {
+  id          String  @id @default(cuid())
+  eventId     String
+  order       Int
+  name        String
+  meta        String?
+  winnerCount Int     @default(1)
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  winners Winner[]
+
+  @@index([eventId, order])
+}
+
+// ---------------------------------------------------------------------------
+// Guest entries
+// ---------------------------------------------------------------------------
+
+model Entry {
+  id      String @id @default(cuid())
+  eventId String
+  number  Int
+
+  // Answers keyed by FormField.key. Personal data lives here and is what an
+  // erasure request clears.
+  data Json @default("{}")
+
+  // Denormalised for duplicate detection and notification, normalised on write.
+  email String?
+  phone String?
+  name  String?
+
+  isDuplicate     Boolean @default(false)
+  duplicateOfId   String?
+  duplicateManual Boolean @default(false)
+
+  // The exact wording, version and moment the guest agreed to.
+  consentText    String
+  consentVersion String
+  consentedAt    DateTime
+  marketingOptIn Boolean  @default(false)
+
+  // Unguessable token so the guest can reopen their own confirmation page.
+  accessToken String @unique @default(cuid())
+
+  createdAt DateTime  @default(now())
+  erasedAt  DateTime?
+
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  duplicateOf   Entry?         @relation("EntryDuplicate", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates    Entry[]        @relation("EntryDuplicate")
+  winner        Winner?
+  guestRequests GuestRequest[]
+
+  @@unique([eventId, number])
+  @@index([eventId, createdAt])
+  @@index([eventId, email])
+  @@index([eventId, phone])
+}
+
+// ---------------------------------------------------------------------------
+// Draw, winners and the audit trail
+// ---------------------------------------------------------------------------
+
+enum ClaimWindow {
+  MINUTES_15
+  HOUR_1
+  TODAY
+  DAYS_7
+}
+
+model Winner {
+  id      String @id @default(cuid())
+  eventId String
+  prizeId String
+  entryId String @unique
+
+  drawnAt       DateTime  @default(now())
+  claimCode     String
+  claimDeadline DateTime?
+
+  notifiedEmailAt DateTime?
+  notifiedSmsAt   DateTime?
+  deliveredAt     DateTime?
+
+  // Set when this winner was superseded by a re-draw.
+  supersededAt     DateTime?
+  supersededReason String?
+
+  accessToken String @unique @default(cuid())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  prize Prize @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+  entry Entry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, drawnAt])
+  @@index([prizeId])
+}
+
+// Append-only. This is what makes "provably fair" more than a slogan: it
+// records the pool a winner came from without keeping the pool's personal data.
+model DrawLog {
+  id      String  @id @default(cuid())
+  eventId String
+  prizeId String?
+
+  algorithm       String
+  eligibleCount   Int
+  eligibleHash    String
+  selectedEntryId String?
+  selectedNumber  Int?
+
+  // Set on a re-draw, naming the winner that was replaced.
+  supersededWinnerId String?
+  reason             String?
+
+  triggeredByUserId String?
+  drawnOffline      Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// GDPR: consent versioning, guest requests, audit
+// ---------------------------------------------------------------------------
+
+model ConsentTextVersion {
+  id             String   @id @default(cuid())
+  organisationId String
+  version        String
+  template       String
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, version])
+}
+
+enum GuestRequestType {
+  EXPORT
+  ERASE
+}
+
+enum GuestRequestStatus {
+  OPEN
+  FULFILLED
+  REJECTED
+}
+
+model GuestRequest {
+  id      String             @id @default(cuid())
+  eventId String
+  entryId String?
+  type    GuestRequestType
+  status  GuestRequestStatus @default(OPEN)
+
+  requestedAt DateTime  @default(now())
+  dueAt       DateTime
+  fulfilledAt DateTime?
+  note        String?
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  entry Entry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, status])
+}
+
+model AuditLog {
+  id             String  @id @default(cuid())
+  organisationId String?
+  userId         String?
+  action         String
+  targetType     String?
+  targetId       String?
+  detail         Json?
+
+  createdAt DateTime @default(now())
+
+  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organisationId, createdAt])
+}
+
+model EmailLog {
+  id         String    @id @default(cuid())
+  template   String
+  toEmail    String
+  subject    String
+  providerId String?
+  status     String    @default("queued")
+  error      String?
+  dedupeKey  String?   @unique
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([toEmail, createdAt])
+}
+
+// Idempotency ledger for the in-process scheduler (reminders, retention,
+// auto-close). One row per job per due window, so a restart cannot double-send.
+model JobRun {
+  id         String    @id @default(cuid())
+  job        String
+  key        String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  error      String?
+
+  @@unique([job, key])
+}

@@ -1,0 +1,15 @@
+# Development overlay: bind-mounts the source and runs `next dev`.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  app:
+    build:
+      context: .
+      target: deps
+    command: sh -c "npx prisma generate && npm run dev"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - uploads:/data/uploads
