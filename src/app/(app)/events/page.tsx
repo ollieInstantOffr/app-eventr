@@ -8,6 +8,7 @@ import { requireSession } from "@/server/auth/session";
 import { dashboardStats, firstRunChecklist, listEvents } from "@/server/events/queries";
 import { storage } from "@/server/storage";
 import { FirstRunChecklist } from "./first-run-checklist";
+import { LoadDemoButton } from "./load-demo-button";
 
 export const metadata = { title: "Your events" };
 
@@ -102,6 +103,14 @@ export default async function EventsPage() {
           <ButtonLink href="/events/new" size="lg" className="mt-2">
             Create your first event
           </ButtonLink>
+
+          <div className="mt-6 w-full max-w-md rounded-panel bg-white/70 px-5 py-4 text-left">
+            <p className="text-[13px] font-bold">Try it with sample data</p>
+            <p className="mt-0.5 text-[12px] leading-snug text-ink-muted">
+              A demo event with 40 fake entries &mdash; deleted when you like.
+            </p>
+            <LoadDemoButton />
+          </div>
         </GlassPanel>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
