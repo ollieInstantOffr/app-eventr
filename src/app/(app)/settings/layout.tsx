@@ -5,7 +5,7 @@ import { SettingsTabs } from "./settings-tabs";
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
-      <header className="sticky top-5 z-20 -mx-1 bg-screen/70 px-1 py-3 backdrop-blur-md sm:top-6">
+      <header className="sticky top-0 z-20 -mx-1 -mt-5 surface px-1 pt-8 pb-3 sm:-mt-6 sm:pt-9">
         <p className="text-[12.5px] font-bold text-ink-muted">
           <Link href="/events" className="hover:text-violet">
             Events

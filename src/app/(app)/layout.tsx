@@ -1,4 +1,3 @@
-import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Sidebar } from "@/components/app/sidebar";
 import { requireSession } from "@/server/auth/session";
 
@@ -8,8 +7,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     [session.user.firstName, session.user.lastName].filter(Boolean).join(" ") || session.user.email;
 
   return (
-    <div className="relative min-h-screen bg-screen">
-      <AmbientBackground />
+    <div className="surface relative min-h-screen">
       {/* 1600px only caps things on genuinely ultra-wide monitors; on an
           ordinary laptop or desktop screen the layout uses the full width,
           just with breathing room at the edges that scales with viewport. */}
