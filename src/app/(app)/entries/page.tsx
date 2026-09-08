@@ -21,7 +21,7 @@ export default async function EntriesIndexPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="sticky top-5 z-20 -mx-1 bg-screen px-1 py-3 sm:top-6">
+      <header className="sticky top-5 z-20 -mx-1 bg-screen/70 px-1 py-3 backdrop-blur-md sm:top-6">
         <h1 className="text-[28px] font-extrabold">Entries</h1>
         <p className="mt-1 text-[14px] text-ink-secondary">
           {events.length === 0

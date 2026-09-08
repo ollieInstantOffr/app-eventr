@@ -143,7 +143,7 @@ export function EventBuilder({
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="sticky top-5 z-20 -mx-1 flex flex-wrap items-end justify-between gap-4 bg-screen px-1 py-3 sm:top-6">
+      <header className="sticky top-5 z-20 -mx-1 flex flex-wrap items-end justify-between gap-4 bg-screen/70 px-1 py-3 backdrop-blur-md sm:top-6">
         <div>
           <p className="text-[12.5px] font-bold text-ink-muted">
             <Link href="/events" className="hover:text-violet">
