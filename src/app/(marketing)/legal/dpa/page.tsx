@@ -29,7 +29,6 @@ export default async function DpaPage() {
     <LegalPage
       kicker={`Legal · Version ${CURRENT_DPA_VERSION} · Updated ${LEGAL_UPDATED_AT}`}
       title="Data Processing Agreement"
-      caveat="Draft for design — must be reviewed by a lawyer before publishing."
       intro={
         <>
           <p>

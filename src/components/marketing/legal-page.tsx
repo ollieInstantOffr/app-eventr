@@ -12,14 +12,12 @@ export function LegalPage({
   intro,
   sections,
   aside,
-  caveat,
 }: {
   kicker: string;
   title: string;
   intro: React.ReactNode;
   sections: LegalSection[];
   aside?: React.ReactNode;
-  caveat?: string;
 }) {
   return (
     <main className="relative mx-auto grid max-w-[1160px] gap-8 px-6 py-10 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -51,12 +49,6 @@ export function LegalPage({
         <div className="mt-4 max-w-[70ch] text-[14.5px] leading-relaxed text-ink-secondary">
           {intro}
         </div>
-
-        {caveat ? (
-          <p className="mt-5 rounded-field bg-peach px-4 py-3 text-[12.5px] font-bold text-peach-ink">
-            {caveat}
-          </p>
-        ) : null}
 
         <div className="mt-9 flex flex-col gap-7">
           {sections.map((section, index) => (
